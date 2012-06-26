@@ -10,6 +10,8 @@ import oauth2 as oauth
 import simplejson as json
 import httplib
 
+import os
+
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -20,6 +22,56 @@ def parseArgs():
     config.read(args.config)
 
     return config
+
+def parseBlogPhotos(posts):
+    output = []
+    for post in posts:
+        url    = post['post_url']
+        date   = post['date']
+        photos = post['photos']
+        for photo in photos:
+            url = photo['original_size']['url']
+            name, ext = os.path.splitext(url)
+
+            if ext == '.jpg' or ext == '.jpeg':
+                data = {}
+                data['url']   = url
+                data['date']  = date
+                output.append(data)
+
+    return output
+
+
+# Go through parsing the response for each blog
+def parseBlogData(blogList, apiKey):
+
+    finalData = []
+
+    con = httplib.HTTPConnection('api.tumblr.com')
+
+    for blog in blogList:
+        blogurl = blog['url']
+# Cut off leading http://
+        req_url = '/v2/blog/' + blogurl[7:] + '/posts/photo'
+        query = req_url + '?api_key=' + apiKey
+        con.request('GET', query)
+        r1 = con.getresponse()
+
+        info = json.loads(r1.read())
+        if info['meta']['status'] != 200:
+            print('could not get posts for %s' % blogurl)
+        else:
+            response = info['response']
+            blogName = response['blog']['title']
+            photos = parseBlogPhotos(response['posts'])
+            if photos:
+                blogData ={}
+                blogData['name']   = blogName
+                blogData['url']    = blogurl
+                blogData['photos'] = photos
+                finalData.append(blogData)
+
+    return finalData
 
 def main():
 
@@ -33,19 +85,15 @@ def main():
     token = oauth.Token(oauth_token, oauth_secret)
     client = oauth.Client(consumer, token)
 
-    response, content = client.request("http://api.tumblr.com/v2/user/following", method="POST")
+    response, content = client.request('http://api.tumblr.com/v2/user/following', method='POST')
 
-    con = httplib.HTTPConnection("api.tumblr.com")
     data = json.loads(content)
-    for blog in data["response"]["blogs"]:
-        blogurl = blog["url"][7:]
-        req_url = "/v2/blog/" + blogurl + "/posts/photo"
-        query = req_url + "?api_key=" + consumer_key
-        con.request("GET", query)
-        r1 = con.getresponse()
 
-        print r1.read()
+    blogData = data['response']['blogs']
 
-if __name__ == "__main__":
+    photos =  parseBlogData(blogData, consumer_key)
+    print(json.dumps(photos))
+
+if __name__ == '__main__':
     main()
 
