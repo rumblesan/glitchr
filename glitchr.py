@@ -45,21 +45,16 @@ def parseBlogPhotos(posts):
 
 
 # Go through parsing the response for each blog
-def parseBlogData(blogList, apiKey):
+def getFollowerPhotos(followers, tumblr):
 
     finalData = []
 
-    con = httplib.HTTPConnection('api.tumblr.com')
+    for blog in followers:
 
-    for blog in blogList:
         blogurl = blog['url']
-# Cut off leading http://
-        req_url = '/v2/blog/' + blogurl[7:] + '/posts/photo'
-        query = req_url + '?api_key=' + apiKey
-        con.request('GET', query)
-        r1 = con.getresponse()
+        # Cut off leading 'http://'
+        info = tumblr.getPosts(blogurl[7:], 'photo')
 
-        info = json.loads(r1.read())
         if info['meta']['status'] != 200:
             print('could not get posts for %s' % blogurl)
         else:
@@ -93,14 +88,14 @@ def main():
     oauthToken     = config.get('oauth', 'key')
     oauthSecret    = config.get('oauth', 'secret')
 
-    t = Tumblr(consumerKey, consumerSecret, oauthToken, oauthSecret)
-    t.authenticate()
+    tumblr = Tumblr(consumerKey, consumerSecret, oauthToken, oauthSecret)
+    tumblr.authenticate()
 
-    data = t.getFollowing()
+    data = tumblr.getFollowing()
 
-    blogData = data['blogs']
+    followers = data['blogs']
 
-    allData =  parseBlogData(blogData, consumerKey)
+    allData =  getFollowerPhotos(followers, tumblr)
 
     print(getPhoto(allData))
 

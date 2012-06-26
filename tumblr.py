@@ -1,6 +1,8 @@
 
 import oauth2 as oauth
 import simplejson as json
+import urllib2
+import urllib
 
 class Tumblr(object):
 
@@ -11,7 +13,7 @@ class Tumblr(object):
         self.oKey    = oauthKey
         self.oSecret = oauthSecret
 
-        self.baseUrl = 'api.tumblr.com/v2/'
+        self.baseUrl = 'http://api.tumblr.com/v2'
 
     def authenticate(self):
         self.consumer = oauth.Consumer(self.cKey, self.cSecret)
@@ -19,9 +21,23 @@ class Tumblr(object):
         self.client = oauth.Client(self.consumer, self.token)
 
     def getFollowing(self):
-        url = 'http://%suser/following' % self.baseUrl
+        url = '%s/user/following' % self.baseUrl
         response, content = self.client.request(url, method='POST')
         return json.loads(content)['response']
 
+    def getPosts(self, blogName, postType=None):
+
+        url = '%s/blog/%s/posts' % (self.baseUrl, blogName)
+        if postType:
+            url += '/%s' % postType
+
+        params = {}
+        params['api_key'] = self.cKey
+        url += '?%s' % urllib.urlencode(params)
+
+        req = urllib2.Request(url=url)
+        f = urllib2.urlopen(req)
+        data = f.read()
+        return json.loads(data)
 
 
