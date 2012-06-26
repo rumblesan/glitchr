@@ -12,6 +12,8 @@ import httplib
 
 import os
 
+from random import choice
+
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -73,6 +75,16 @@ def parseBlogData(blogList, apiKey):
 
     return finalData
 
+def getPhoto(data):
+    blog = choice(data)
+    image = choice(blog['photos'])
+    data = {}
+    data['name']  = blog['name']
+    data['url']   = blog['url']
+    data['image'] = image['url']
+    data['date']  = image['date']
+    return data
+
 def main():
 
     config = parseArgs()
@@ -91,8 +103,10 @@ def main():
 
     blogData = data['response']['blogs']
 
-    photos =  parseBlogData(blogData, consumer_key)
-    print(json.dumps(photos))
+    allData =  parseBlogData(blogData, consumer_key)
+
+    print(getPhoto(allData))
+
 
 if __name__ == '__main__':
     main()
