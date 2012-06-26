@@ -26,7 +26,7 @@ def parseArgs():
     return config
 
 def parseBlogPhotos(posts):
-    output = []
+    allPhotos = []
     for post in posts:
         url    = post['post_url']
         date   = post['date']
@@ -35,42 +35,44 @@ def parseBlogPhotos(posts):
             url = photo['original_size']['url']
             name, ext = os.path.splitext(url)
 
+            # We only want jpeg images, because that's all I can glitch
             if ext == '.jpg' or ext == '.jpeg':
                 data = {}
                 data['url']   = url
                 data['date']  = date
-                output.append(data)
+                allPhotos.append(data)
 
-    return output
+    return allPhotos
 
 
 # Go through parsing the response for each blog
 def getFollowerPhotos(followers, tumblr):
 
-    finalData = []
+    followerPhotos = []
 
     for blog in followers:
 
-        blogurl = blog['url']
+        blogUrl = blog['url']
         # Cut off leading 'http://'
-        info = tumblr.getPosts(blogurl[7:], 'photo')
+        posts = tumblr.getPosts(blogUrl[7:], 'photo')
 
-        if info['meta']['status'] != 200:
-            print('could not get posts for %s' % blogurl)
+        if posts['meta']['status'] != 200:
+            print('could not get posts for %s' % blogUrl)
         else:
-            response = info['response']
+            response = posts['response']
             blogName = response['blog']['title']
-            photos = parseBlogPhotos(response['posts'])
+            posts    = response['posts']
+            photos   = parseBlogPhotos(posts)
             if photos:
-                blogData ={}
+                blogData = {}
                 blogData['name']   = blogName
-                blogData['url']    = blogurl
+                blogData['url']    = blogUrl
                 blogData['photos'] = photos
-                finalData.append(blogData)
+                followerPhotos.append(blogData)
 
-    return finalData
+    return followerPhotos
 
-def getPhoto(data):
+def getRandomPhoto(data):
     blog = choice(data)
     image = choice(blog['photos'])
     data = {}
@@ -97,7 +99,7 @@ def main():
 
     allData =  getFollowerPhotos(followers, tumblr)
 
-    print(getPhoto(allData))
+    print(getRandomPhoto(allData))
 
 
 if __name__ == '__main__':
