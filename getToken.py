@@ -2,6 +2,9 @@
 
 # Basic script used to get OAUTH Tokens from tumblr
 
+import ConfigParser
+import argparse
+
 import oauth2 as oauth
 import urlparse
 
@@ -9,12 +12,26 @@ CONSUMER_KEY = ''
 CONSUMER_SECRET = ''
 
 
+def parseArgs():
+    parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
+    parser.add_argument('config', help='The config file', required=True)
+    args = parser.parse_args()
+
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config)
+
+    return config
+
 def main():
     REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
     AUTHORIZATION_URL = 'http://www.tumblr.com/oauth/authorize'
     ACCESS_TOKEN_URL = 'http://www.tumblr.com/oauth/access_token'
 
-    consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
+    config = parseArgs()
+    consumer_key    = config.get('consumer', 'key')
+    consumer_secret = config.get('consumer', 'secret')
+
+    consumer = oauth.Consumer(consumer_key, consumer_secret)
     client = oauth.Client(consumer)
 
     resp, content = client.request(REQUEST_TOKEN_URL, "GET")

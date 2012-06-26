@@ -3,6 +3,9 @@
 # This is an interface to the specific bits of the tumblr
 # API I'm interested in
 
+import ConfigParser
+import argparse
+
 import oauth2 as oauth
 import simplejson as json
 import httplib
@@ -13,10 +16,29 @@ CONSUMER_SECRET = ''
 OAUTH_TOKEN = ''
 OAUTH_TOKEN_SECRET = ''
 
+
+def parseArgs():
+    parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
+    parser.add_argument('config', help='The config file', required=True)
+    args = parser.parse_args()
+
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config)
+
+    return config
+
 def main():
 
-    consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
-    token = oauth.Token(OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+    config = parseArgs()
+
+    consumer_key    = config.get('consumer', 'key')
+    consumer_secret = config.get('consumer', 'secret')
+
+    oauth_token     = config.get('oauth', 'key')
+    oauth_secret    = config.get('oauth', 'secret')
+
+    consumer = oauth.Consumer(consumer_key, consumer_secret)
+    token = oauth.Token(oauth_token, oauth_secret)
     client = oauth.Client(consumer, token)
 
     response, content = client.request("http://api.tumblr.com/v2/user/following", method="POST")
