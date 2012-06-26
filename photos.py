@@ -10,16 +10,10 @@ import oauth2 as oauth
 import simplejson as json
 import httplib
 
-CONSUMER_KEY = ''
-CONSUMER_SECRET = ''
-
-OAUTH_TOKEN = ''
-OAUTH_TOKEN_SECRET = ''
-
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
-    parser.add_argument('config', help='The config file', required=True)
+    parser.add_argument('config', help='The config file')
     args = parser.parse_args()
 
     config = ConfigParser.SafeConfigParser()
@@ -30,10 +24,8 @@ def parseArgs():
 def main():
 
     config = parseArgs()
-
     consumer_key    = config.get('consumer', 'key')
     consumer_secret = config.get('consumer', 'secret')
-
     oauth_token     = config.get('oauth', 'key')
     oauth_secret    = config.get('oauth', 'secret')
 
@@ -48,7 +40,7 @@ def main():
     for blog in data["response"]["blogs"]:
         blogurl = blog["url"][7:]
         req_url = "/v2/blog/" + blogurl + "/posts/photo"
-        query = req_url + "?api_key=" + CONSUMER_KEY
+        query = req_url + "?api_key=" + consumer_key
         con.request("GET", query)
         r1 = con.getresponse()
 

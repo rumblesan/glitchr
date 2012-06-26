@@ -13,8 +13,8 @@ CONSUMER_SECRET = ''
 
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
-    parser.add_argument('config', help='The config file', required=True)
+    parser = argparse.ArgumentParser(description='Get OAUTH tokens from tumblr')
+    parser.add_argument('config', help='The config file')
     args = parser.parse_args()
 
     config = ConfigParser.SafeConfigParser()
