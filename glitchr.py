@@ -6,7 +6,6 @@
 import ConfigParser
 import argparse
 
-import oauth2 as oauth
 import simplejson as json
 import httplib
 
@@ -14,6 +13,7 @@ import os
 
 from random import choice
 
+from tumblr import Tumblr
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -88,22 +88,19 @@ def getPhoto(data):
 def main():
 
     config = parseArgs()
-    consumer_key    = config.get('consumer', 'key')
-    consumer_secret = config.get('consumer', 'secret')
-    oauth_token     = config.get('oauth', 'key')
-    oauth_secret    = config.get('oauth', 'secret')
+    consumerKey    = config.get('consumer', 'key')
+    consumerSecret = config.get('consumer', 'secret')
+    oauthToken     = config.get('oauth', 'key')
+    oauthSecret    = config.get('oauth', 'secret')
 
-    consumer = oauth.Consumer(consumer_key, consumer_secret)
-    token = oauth.Token(oauth_token, oauth_secret)
-    client = oauth.Client(consumer, token)
+    t = Tumblr(consumerKey, consumerSecret, oauthToken, oauthSecret)
+    t.authenticate()
 
-    response, content = client.request('http://api.tumblr.com/v2/user/following', method='POST')
+    data = t.getFollowing()
 
-    data = json.loads(content)
+    blogData = data['blogs']
 
-    blogData = data['response']['blogs']
-
-    allData =  parseBlogData(blogData, consumer_key)
+    allData =  parseBlogData(blogData, consumerKey)
 
     print(getPhoto(allData))
 
