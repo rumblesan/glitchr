@@ -12,6 +12,7 @@ from random import choice
 
 from tumblr import Tumblr
 from photo import Photo
+from jpegglitcher import JpegGlitcher
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -101,7 +102,14 @@ def main():
     randImage = getRandomPhoto(allData)
 
     randImage['imageData'].retrieve()
-    randImage['imageData'].save('output.jpg')
+    randImage['imageData'].save('temp.jpg')
+
+    parser = JpegGlitcher('temp.jpg')
+    parser.parse_file()
+    parser.find_parts()
+    parser.quantize_glitch()
+    parser.output_file('output.jpg')
+
 
 
 if __name__ == '__main__':
