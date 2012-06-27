@@ -40,4 +40,15 @@ class Tumblr(object):
         data = f.read()
         return json.loads(data)
 
+    def addImagePost(self, blogName, imageData):
+        params = {}
+        params['type'] = 'photo'
+        params['tags'] = 'glitch, generative, random'
+        params['data'] = imageData
+
+    def addPost(self, blogName, params):
+        data = urllib.urlencode(params)
+        url = '%s/blog/%s/post' % (self.baseUrl, blogName)
+        response, content = self.client.request(url, method='POST', body=data)
+        return json.loads(content)['response']
 
