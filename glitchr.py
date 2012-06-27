@@ -6,9 +6,6 @@
 import ConfigParser
 import argparse
 
-import simplejson as json
-import httplib
-
 import os
 
 from random import choice
