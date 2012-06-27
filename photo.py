@@ -1,7 +1,7 @@
 
 import urllib2
 
-class TumblrPhoto(object):
+class Photo(object):
 
     def __init__(self, url):
         self.url = url

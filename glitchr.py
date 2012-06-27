@@ -14,7 +14,7 @@ import os
 from random import choice
 
 from tumblr import Tumblr
-from TumblrPhoto import TumblrPhoto
+from photo import Photo
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -81,7 +81,7 @@ def getRandomPhoto(data):
     data['url']   = blog['url']
     data['image'] = image['url']
     data['date']  = image['date']
-    data['imageData'] = TumblrPhoto(data['image'])
+    data['imageData'] = Photo(data['image'])
     return data
 
 def main():
