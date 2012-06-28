@@ -4,11 +4,12 @@ from StringIO import StringIO
 
 class JpegParser(object):
 
-    def __init__(self, fileData):
+    def __init__(self, fileData, verbose=False):
         self.fileData = StringIO(fileData)
         self.structures = []
         self.parsers    = []
         self.setup_parsers()
+        self.verbose = verbose
 
     def parse_data(self):
         byte = self.fileData.read(1)
@@ -21,7 +22,8 @@ class JpegParser(object):
     def output_file(self, filename):
         output = StringIO()
         for p in self.structures:
-            p.about()
+            if self.verbose:
+                p.about()
             p.write_data(output)
         output.seek(0)
         return output
@@ -32,7 +34,8 @@ class JpegParser(object):
                 newstruct = p.get_new()
                 newstruct.read_data(fp)
                 newstruct.tag = tag
-                newstruct.about()
+                if self.verbose:
+                    newstruct.about()
                 self.structures.append(newstruct)
                 return True
         return False
