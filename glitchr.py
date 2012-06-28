@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -- coding: utf-8 --
 
 # This is an interface to the specific bits of the tumblr
 # API I'm interested in
@@ -7,10 +8,11 @@ import ConfigParser
 import argparse
 
 import os
+import sys
 
 from random import choice
 
-from tumblr import Tumblr
+from tumblpy import Tumblpy
 from photo import Photo
 from jpegglitcher import JpegGlitcher
 
@@ -52,22 +54,17 @@ def getFollowerPhotos(followers, tumblr):
     for blog in followers:
 
         blogUrl = blog['url']
-        # Cut off leading 'http://'
-        posts = tumblr.getPosts(blogUrl[7:], 'photo')
+        response = tumblr.api_request('posts', blogUrl, extra_endpoints=['photo'])
 
-        if posts['meta']['status'] != 200:
-            print('could not get posts for %s' % blogUrl)
-        else:
-            response = posts['response']
-            blogName = response['blog']['title']
-            posts    = response['posts']
-            photos   = parseBlogPhotos(posts)
-            if photos:
-                blogData = {}
-                blogData['name']   = blogName
-                blogData['url']    = blogUrl
-                blogData['photos'] = photos
-                followerPhotos.append(blogData)
+        blogName = response['blog']['title']
+        posts    = response['posts']
+        photos   = parseBlogPhotos(posts)
+        if photos:
+            blogData = {}
+            blogData['name']   = blogName
+            blogData['url']    = blogUrl
+            blogData['photos'] = photos
+            followerPhotos.append(blogData)
 
     return followerPhotos
 
@@ -90,10 +87,9 @@ def main():
     oauthToken     = config.get('oauth', 'key')
     oauthSecret    = config.get('oauth', 'secret')
 
-    tumblr = Tumblr(consumerKey, consumerSecret, oauthToken, oauthSecret)
-    tumblr.authenticate()
+    tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
 
-    data = tumblr.getFollowing()
+    data = tumblr.api_request('user/following')
 
     followers = data['blogs']
 
@@ -109,6 +105,17 @@ def main():
     parser.find_parts()
     parser.quantize_glitch()
     parser.output_file('output.jpg')
+
+    fp = open('output.jpg', 'rb')
+
+    params = {}
+    params['type'] = 'photo'
+    params['tags'] = 'glitch, generative, random'
+
+    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=fp)
+    fp.close()
+    print(response)
+
 
 
 
