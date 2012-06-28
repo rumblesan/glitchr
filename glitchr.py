@@ -104,16 +104,14 @@ def main():
     parser.parse_data()
     parser.find_parts()
     parser.quantize_glitch()
-    parser.output_file('output.jpg')
-
-    fp = open('output.jpg', 'rb')
+    glitched = parser.output_file('output.jpg')
+    glitched.name = 'file.jpeg'
 
     params = {}
     params['type'] = 'photo'
     params['tags'] = 'glitch, generative, random'
 
-    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=fp)
-    fp.close()
+    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
     print(response)
 
 

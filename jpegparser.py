@@ -19,11 +19,12 @@ class JpegParser(object):
             byte = self.fileData.read(1)
 
     def output_file(self, filename):
-        print("Outputting File")
-        with open(filename, "wb") as fp:
-            for p in self.structures:
-                p.about()
-                p.write_data(fp)
+        output = StringIO()
+        for p in self.structures:
+            p.about()
+            p.write_data(output)
+        output.seek(0)
+        return output
 
     def check_tag(self, tag, fp):
         for p in self.parsers:
