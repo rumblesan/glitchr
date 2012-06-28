@@ -11,6 +11,7 @@ import os
 import sys
 
 from random import choice
+from string import Template
 
 from tumblpy import Tumblpy
 from photo import Photo
@@ -79,6 +80,16 @@ def getRandomPhoto(data):
     data['imageData'] = Photo(data['image'])
     return data
 
+def createCaption(data):
+    templt = 'Original picture courtesy of '
+    templt += '<a href="${url}">${name}</a>'
+    templt += '\n'
+    templt += 'First posted on ${date}'
+    c = Template(templt)
+
+    return c.substitute(data)
+
+
 def main():
 
     config = parseArgs()
@@ -100,6 +111,8 @@ def main():
     randImage['imageData'].retrieve()
     imgData = randImage['imageData'].getData()
 
+    caption = createCaption(randImage)
+
     parser = JpegGlitcher(imgData)
     parser.parse_data()
     parser.find_parts()
@@ -109,10 +122,11 @@ def main():
 
     params = {}
     params['type'] = 'photo'
+    params['caption'] = caption
     params['tags'] = 'glitch, generative, random'
 
     response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
-    print(response)
+    print('post id is %s' % response['id'])
 
 
 
