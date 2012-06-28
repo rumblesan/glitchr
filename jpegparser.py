@@ -1,22 +1,22 @@
 
 from struct import pack, unpack
+from StringIO import StringIO
 
 class JpegParser(object):
 
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, fileData):
+        self.fileData = StringIO(fileData)
         self.structures = []
         self.parsers    = []
         self.setup_parsers()
 
-    def parse_file(self):
-        with open(self.filename, "rb") as fp:
-            byte = fp.read(1)
-            while byte != b"":
-                if byte == '\xFF':
-                    byte = fp.read(1)
-                    self.check_tag(byte, fp)
-                byte = fp.read(1)
+    def parse_data(self):
+        byte = self.fileData.read(1)
+        while byte != b"":
+            if byte == '\xFF':
+                byte = self.fileData.read(1)
+                self.check_tag(byte, self.fileData)
+            byte = self.fileData.read(1)
 
     def output_file(self, filename):
         print("Outputting File")

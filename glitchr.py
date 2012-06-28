@@ -98,10 +98,10 @@ def main():
     randImage = getRandomPhoto(allData)
 
     randImage['imageData'].retrieve()
-    randImage['imageData'].save('temp.jpg')
+    imgData = randImage['imageData'].getData()
 
-    parser = JpegGlitcher('temp.jpg')
-    parser.parse_file()
+    parser = JpegGlitcher(imgData)
+    parser.parse_data()
     parser.find_parts()
     parser.quantize_glitch()
     parser.output_file('output.jpg')

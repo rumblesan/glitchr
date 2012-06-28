@@ -11,6 +11,9 @@ class Photo(object):
         f = urllib2.urlopen(req)
         self.data = f.read()
 
+    def getData(self):
+        return self.data
+
     def save(self, fileName):
         of = open(fileName, 'wb')
         of.write(self.data)
