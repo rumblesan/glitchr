@@ -55,7 +55,12 @@ def getFollowerPhotos(followers, tumblr):
     for blog in followers:
 
         blogUrl = blog['url']
-        response = tumblr.api_request('posts', blogUrl, extra_endpoints=['photo'])
+        params = {}
+        params['tag'] = 'landscape'
+        response = tumblr.api_request('posts',
+                                      blogUrl,
+                                      extra_endpoints=['photo'],
+                                      params=params)
 
         blogName = response['blog']['title']
         posts    = response['posts']
