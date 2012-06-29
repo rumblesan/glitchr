@@ -71,27 +71,21 @@ def getFollowerPhotos(followers, tumblr):
                                       extra_endpoints=['photo'],
                                       params=params)
 
-        blogName = response['blog']['title']
         photos   = parseBlogPhotos(response)
         if photos:
-            blogData = {}
-            blogData['name']   = blogName
-            blogData['url']    = blogUrl
-            blogData['photos'] = photos
-            followerPhotos.append(blogData)
+            followerPhotos += photos
 
     return followerPhotos
 
-def getRandomPhoto(data):
-    blog = choice(data)
-    image = choice(blog['photos'])
+def getRandomPhoto(photos):
+    photo = choice(photos)
     data = {}
-    data['blogName']  = image['blogName']
-    data['postUrl']   = image['postUrl']
-    data['blogUrl']   = image['blogUrl']
-    data['postDate']  = image['postDate']
-    data['imgUrl']    = image['imgUrl']
-    data['imageData'] = Photo(image['imgUrl'])
+    data['blogName']  = photo['blogName']
+    data['postUrl']   = photo['postUrl']
+    data['blogUrl']   = photo['blogUrl']
+    data['postDate']  = photo['postDate']
+    data['imgUrl']    = photo['imgUrl']
+    data['imageData'] = Photo(photo['imgUrl'])
     return data
 
 def createCaption(data):
@@ -120,11 +114,11 @@ def main():
 
     followers = data['blogs']
 
-    allData =  getFollowerPhotos(followers, tumblr)
+    photos =  getFollowerPhotos(followers, tumblr)
 
-    randImage = getRandomPhoto(allData)
+    print('%s photos found to choose from' % len(photos))
 
-    print(randImage)
+    randImage = getRandomPhoto(photos)
 
     randImage['imageData'].retrieve()
     imgData = randImage['imageData'].getData()
