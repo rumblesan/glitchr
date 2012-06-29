@@ -57,25 +57,19 @@ def parseBlogPhotos(blog):
 
 
 # Go through parsing the response for each blog
-def getFollowerPhotos(followers, tumblr):
+def getFollowerPhotos(blog, tumblr):
 
-    followerPhotos = []
+    blogUrl = blog['url']
+    params = {}
+    params['tag'] = 'landscape'
+    response = tumblr.api_request('posts',
+                                  blogUrl,
+                                  extra_endpoints=['photo'],
+                                  params=params)
 
-    for blog in followers:
+    photos = parseBlogPhotos(response)
 
-        blogUrl = blog['url']
-        params = {}
-        params['tag'] = 'landscape'
-        response = tumblr.api_request('posts',
-                                      blogUrl,
-                                      extra_endpoints=['photo'],
-                                      params=params)
-
-        photos   = parseBlogPhotos(response)
-        if photos:
-            followerPhotos += photos
-
-    return followerPhotos
+    return photos
 
 def getRandomPhoto(photos):
     photo = choice(photos)
@@ -114,7 +108,11 @@ def main():
 
     followers = data['blogs']
 
-    photos =  getFollowerPhotos(followers, tumblr)
+    photos = []
+    for blog in followers:
+        blogPhotos =  getFollowerPhotos(blog, tumblr)
+        if blogPhotos:
+            photos += blogPhotos
 
     print('%s photos found to choose from' % len(photos))
 
