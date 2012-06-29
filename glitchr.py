@@ -8,7 +8,6 @@ import ConfigParser
 import argparse
 
 import os
-import sys
 
 from random import choice
 from string import Template
@@ -27,6 +26,7 @@ def parseArgs():
 
     return config
 
+
 def parseBlogPhotos(blog):
     allPhotos = []
 
@@ -40,55 +40,46 @@ def parseBlogPhotos(blog):
 
         for photo in post['photos']:
 
-            imgUrl    = photo['original_size']['url']
+            imgUrl = photo['original_size']['url']
             name, ext = os.path.splitext(imgUrl)
 
             # We only want jpeg images, because that's all I can glitch
             if ext == '.jpg' or ext == '.jpeg':
-                data = {}
-                data['blogName'] = blogName
-                data['postUrl']  = postUrl
-                data['blogUrl']  = blogUrl
-                data['imgUrl']   = imgUrl
-                data['postDate'] = postDate
+                data = {
+                        'blogName': blogName,
+                        'postUrl': postUrl,
+                        'blogUrl': blogUrl,
+                        'imgUrl': imgUrl,
+                        'postDate': postDate
+                        }
                 allPhotos.append(data)
 
     return allPhotos
 
 
 # Go through parsing the response for each blog
-def getFollowerPhotos(blog, tumblr):
+def getFollowerPhotos(blogInfo, tumblr):
 
-    blogUrl = blog['url']
-    params = {}
-    params['tag'] = 'landscape'
+    blogUrl = blogInfo['url']
+    params = {'tag': 'landscape'}
     response = tumblr.api_request('posts',
                                   blogUrl,
                                   extra_endpoints=['photo'],
                                   params=params)
 
-    photos = parseBlogPhotos(response)
-
-    return photos
+    return parseBlogPhotos(response)
 
 def getRandomPhoto(photos):
     photo = choice(photos)
-    data = {}
-    data['blogName']  = photo['blogName']
-    data['postUrl']   = photo['postUrl']
-    data['blogUrl']   = photo['blogUrl']
-    data['postDate']  = photo['postDate']
-    data['imgUrl']    = photo['imgUrl']
-    data['imageData'] = Photo(photo['imgUrl'])
-    return data
+    photo['imageData'] = Photo(photo['imgUrl'])
+    return photo
 
 def createCaption(data):
-    templt  = '<a href="$imgUrl">Original</a>'
-    templt += ' image courtesy of '
+    templt  = '<a href="$imgUrl">Original</a> '
+    templt += 'image courtesy of '
     templt += '<a href="${blogUrl}">${blogName}</a>'
     templt += '\n'
-    templt += '<a href="$postUrl">First posted</a>'
-    templt += ' on ${postDate}'
+    templt += '<a href="$postUrl">First posted</a> on ${postDate}'
     c = Template(templt)
 
     return c.substitute(data)
@@ -104,24 +95,22 @@ def main():
 
     tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
 
-    data = tumblr.api_request('user/following')
+    followers = tumblr.api_request('user/following')['blogs']
 
-    followers = data['blogs']
-
-    photos = []
+    allPhotos = []
     for blog in followers:
         blogPhotos =  getFollowerPhotos(blog, tumblr)
         if blogPhotos:
-            photos += blogPhotos
+            allPhotos += blogPhotos
 
-    print('%s photos found to choose from' % len(photos))
+    print('%s photos found to choose from' % len(allPhotos))
 
-    randImage = getRandomPhoto(photos)
+    photo = getRandomPhoto(allPhotos)
 
-    randImage['imageData'].retrieve()
-    imgData = randImage['imageData'].getData()
+    photo['imageData'].retrieve()
+    imgData = photo['imageData'].getData()
 
-    caption = createCaption(randImage)
+    caption = createCaption(photo)
     print(caption)
 
     parser = JpegGlitcher(imgData)
@@ -131,10 +120,11 @@ def main():
     glitched = parser.output_file('output.jpg')
     glitched.name = 'file.jpeg'
 
-    params = {}
-    params['type'] = 'photo'
-    params['caption'] = caption
-    params['tags'] = 'glitch, generative, random'
+    params = {
+            'type': 'photo',
+            'caption': caption,
+            'tags': 'glitch, generative, random'
+            }
 
     #response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
     #print('post id is %s' % response['id'])

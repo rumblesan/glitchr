@@ -251,7 +251,6 @@ class Tumblpy(object):
                     'Content-Length': str(len(body))
                 })
 
-                print(url)
                 req = urllib2.Request(url, body, self.headers)
                 try:
                     req = urllib2.urlopen(req)
