@@ -27,47 +27,56 @@ def parseArgs():
     return config
 
 
-def parseBlogPhotos(blog):
-    allPhotos = []
 
-    blogName = blog['blog']['title']
-    blogUrl  = blog['blog']['url']
-
-    for post in blog['posts']:
-
-        postUrl  = post['post_url']
-        postDate = post['date']
-
-        for photo in post['photos']:
-
-            imgUrl = photo['original_size']['url']
-            name, ext = os.path.splitext(imgUrl)
-
-            # We only want jpeg images, because that's all I can glitch
-            if ext == '.jpg' or ext == '.jpeg':
-                data = {
-                        'blogName': blogName,
-                        'postUrl': postUrl,
-                        'blogUrl': blogUrl,
-                        'imgUrl': imgUrl,
-                        'postDate': postDate
-                        }
-                allPhotos.append(data)
-
-    return allPhotos
-
-
-# Go through parsing the response for each blog
 def getFollowerPhotos(blogInfo, tumblr):
-
     blogUrl = blogInfo['url']
     params = {'tag': 'landscape'}
-    response = tumblr.api_request('posts',
-                                  blogUrl,
-                                  extra_endpoints=['photo'],
-                                  params=params)
+    postsInfo = tumblr.api_request('posts',
+                                   blogUrl,
+                                   extra_endpoints=['photo'],
+                                   params=params)
 
-    return parseBlogPhotos(response)
+    return parseFollowerBlog(postsInfo)
+
+def parseFollowerBlog(postsInfo):
+    blogPhotos = []
+
+    blog  = postsInfo['blog']
+    posts = postsInfo['posts']
+
+    for post in posts:
+        blogPhotos += parsePostPhotos(blog, post)
+
+    return blogPhotos
+
+def parsePostPhotos(blog, post):
+    postPhotos = []
+
+    blogName = blog['title']
+    blogUrl  = blog['url']
+
+    postUrl  = post['post_url']
+    postDate = post['date']
+    photos   = post['photos']
+
+    for photo in photos:
+        imgUrl = photo['original_size']['url']
+        name, ext = os.path.splitext(imgUrl)
+
+        # We only want jpeg images, because that's all I can glitch atm
+        if ext == '.jpg' or ext == '.jpeg':
+            data = {
+                    'blogName': blogName,
+                    'postUrl': postUrl,
+                    'blogUrl': blogUrl,
+                    'imgUrl': imgUrl,
+                    'postDate': postDate
+                    }
+            postPhotos.append(data)
+
+    return postPhotos
+
+
 
 def getRandomPhoto(photos):
     photo = choice(photos)
