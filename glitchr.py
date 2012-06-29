@@ -27,18 +27,25 @@ def parseArgs():
     return config
 
 
+# Get all the photos from followers photo posts
+def getFollowerPhotos(followers, tumblr, tag=None):
+    allPhotos = []
 
-def getFollowerPhotos(blogInfo, tumblr):
-    blogUrl = blogInfo['url']
-    params = {'tag': 'landscape'}
-    postsInfo = tumblr.api_request('posts',
-                                   blogUrl,
-                                   extra_endpoints=['photo'],
-                                   params=params)
+    for blog in followers:
+        blogUrl = blog['url']
+        params = {}
+        if tag:
+            params['tag'] = tag
 
-    return parseFollowerBlog(postsInfo)
+        postsInfo = tumblr.api_request('posts',
+                                       blogUrl,
+                                       extra_endpoints=['photo'],
+                                       params=params)
+        allPhotos += parseFollowerPosts(postsInfo)
 
-def parseFollowerBlog(postsInfo):
+    return allPhotos
+
+def parseFollowerPosts(postsInfo):
     blogPhotos = []
 
     blog  = postsInfo['blog']
@@ -59,11 +66,13 @@ def parsePostPhotos(blog, post):
     postDate = post['date']
     photos   = post['photos']
 
+    # There could be multiple photos in one post
+    # so we need to iterate through them all
     for photo in photos:
         imgUrl = photo['original_size']['url']
         name, ext = os.path.splitext(imgUrl)
 
-        # We only want jpeg images, because that's all I can glitch atm
+        # We only want jpeg images, because that's all we can glitch atm
         if ext == '.jpg' or ext == '.jpeg':
             data = {
                     'blogName': blogName,
@@ -106,11 +115,8 @@ def main():
 
     followers = tumblr.api_request('user/following')['blogs']
 
-    allPhotos = []
-    for blog in followers:
-        blogPhotos =  getFollowerPhotos(blog, tumblr)
-        if blogPhotos:
-            allPhotos += blogPhotos
+    tag = 'landscape'
+    allPhotos =  getFollowerPhotos(followers, tumblr, tag)
 
     print('%s photos found to choose from' % len(allPhotos))
 
@@ -135,8 +141,8 @@ def main():
             'tags': 'glitch, generative, random'
             }
 
-    #response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
-    #print('post id is %s' % response['id'])
+    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
+    print('post id is %s' % response['id'])
 
 
 
