@@ -27,21 +27,30 @@ def parseArgs():
 
     return config
 
-def parseBlogPhotos(posts):
+def parseBlogPhotos(blog):
     allPhotos = []
-    for post in posts:
-        url    = post['post_url']
-        date   = post['date']
-        photos = post['photos']
-        for photo in photos:
-            url = photo['original_size']['url']
-            name, ext = os.path.splitext(url)
+
+    blogName = blog['blog']['title']
+    blogUrl  = blog['blog']['url']
+
+    for post in blog['posts']:
+
+        postUrl  = post['post_url']
+        postDate = post['date']
+
+        for photo in post['photos']:
+
+            imgUrl    = photo['original_size']['url']
+            name, ext = os.path.splitext(imgUrl)
 
             # We only want jpeg images, because that's all I can glitch
             if ext == '.jpg' or ext == '.jpeg':
                 data = {}
-                data['url']   = url
-                data['date']  = date
+                data['blogName'] = blogName
+                data['postUrl']  = postUrl
+                data['blogUrl']  = blogUrl
+                data['imgUrl']   = imgUrl
+                data['postDate'] = postDate
                 allPhotos.append(data)
 
     return allPhotos
@@ -63,8 +72,7 @@ def getFollowerPhotos(followers, tumblr):
                                       params=params)
 
         blogName = response['blog']['title']
-        posts    = response['posts']
-        photos   = parseBlogPhotos(posts)
+        photos   = parseBlogPhotos(response)
         if photos:
             blogData = {}
             blogData['name']   = blogName
@@ -78,18 +86,21 @@ def getRandomPhoto(data):
     blog = choice(data)
     image = choice(blog['photos'])
     data = {}
-    data['name']  = blog['name']
-    data['url']   = blog['url']
-    data['image'] = image['url']
-    data['date']  = image['date']
-    data['imageData'] = Photo(data['image'])
+    data['blogName']  = image['blogName']
+    data['postUrl']   = image['postUrl']
+    data['blogUrl']   = image['blogUrl']
+    data['postDate']  = image['postDate']
+    data['imgUrl']    = image['imgUrl']
+    data['imageData'] = Photo(image['imgUrl'])
     return data
 
 def createCaption(data):
-    templt = 'Original picture courtesy of '
-    templt += '<a href="${url}">${name}</a>'
+    templt  = '<a href="$imgUrl">Original</a>'
+    templt += ' image courtesy of '
+    templt += '<a href="${blogUrl}">${blogName}</a>'
     templt += '\n'
-    templt += 'First posted on ${date}'
+    templt += '<a href="$postUrl">First posted</a>'
+    templt += ' on ${postDate}'
     c = Template(templt)
 
     return c.substitute(data)
@@ -113,10 +124,13 @@ def main():
 
     randImage = getRandomPhoto(allData)
 
+    print(randImage)
+
     randImage['imageData'].retrieve()
     imgData = randImage['imageData'].getData()
 
     caption = createCaption(randImage)
+    print(caption)
 
     parser = JpegGlitcher(imgData)
     parser.parse_data()
@@ -130,8 +144,8 @@ def main():
     params['caption'] = caption
     params['tags'] = 'glitch, generative, random'
 
-    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
-    print('post id is %s' % response['id'])
+    #response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
+    #print('post id is %s' % response['id'])
 
 
 
