@@ -10,6 +10,7 @@ import argparse
 import os
 from time import sleep
 from basiccache import BasicCache
+import sys
 
 from random import choice
 from string import Template
@@ -154,18 +155,32 @@ def glitchPhoto(photo):
 
 def main():
 
+    print('###################')
+    print('#     Glitchr     #')
+    print('###################')
+    print('\n')
     args, config = parseArgs()
     consumerKey    = config.get('consumer', 'key')
     consumerSecret = config.get('consumer', 'secret')
     oauthToken     = config.get('oauth', 'key')
     oauthSecret    = config.get('oauth', 'secret')
 
+
+    print('Sorting out Tumblr OAuth')
     tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
 
-    postCache = BasicCache(config.get('cache', 'posts'))
+    tags = config.get('misc', 'tags').split(',')
+    if tags:
+        tag = choice(tags)
+    else:
+        tag = None
+
+    print('Getting images with %s tag' % tag)
+
+    cacheFileName = '%s-%s' % (tag, config.get('cache', 'posts'))
+    postCache = BasicCache(cacheFileName)
     postCache.loadCache()
 
-    tag = 'landscape'
     allPhotos =  getBlogPhotos(tumblr, postCache, tag)
 
     postCache.saveCache()
@@ -200,6 +215,8 @@ def main():
             print('Bugger, something went wrong!')
             print(e)
 
+    print('\n')
+    print('All done')
 
 
 
