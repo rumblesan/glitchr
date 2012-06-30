@@ -8,6 +8,7 @@ import ConfigParser
 import argparse
 
 import os
+from time import sleep
 
 from random import choice
 from string import Template
@@ -39,7 +40,7 @@ def getBlogPhotos(tumblr, tag=None):
     for blog in following['blogs']:
         blogUrl  = blog['url']
         blogName = blog['name']
-        print('Getting images from %s at %s' %(blogName, blogUrl))
+        print('    Getting images from %s at %s' %(blogName, blogUrl))
         params = {}
         if tag:
             params['tag'] = tag
@@ -50,7 +51,7 @@ def getBlogPhotos(tumblr, tag=None):
                                        params=params)
         allPhotos += parseBlogPosts(postsInfo)
 
-    print('%s photos found to choose from' % len(allPhotos))
+    print('%s photos found to choose from\n' % len(allPhotos))
     return allPhotos
 
 def parseBlogPosts(postsInfo):
@@ -62,7 +63,7 @@ def parseBlogPosts(postsInfo):
     for post in posts:
         blogPhotos += parsePostPhotos(blog, post)
 
-    print('    blog has %s photos' % len(blogPhotos))
+    print('        blog has %s photos' % len(blogPhotos))
     return blogPhotos
 
 def parsePostPhotos(blog, post):
@@ -114,7 +115,7 @@ def createCaption(photo):
 
     return c.substitute(photo)
 
-def photoInfoLogMessage(photo):
+def printPhotoInfoLogMessage(photo):
     templt  = 'Caption Info:'
     templt += '\n'
     templt += '    Original image courtesy of ${blogName}'
@@ -127,7 +128,7 @@ def photoInfoLogMessage(photo):
 
 
 def glitchPhoto(photo):
-    print('Glitching image')
+    print('Glitching image\n')
     parser = JpegGlitcher(photo['imageData'])
     parser.parse_data()
     parser.find_parts()
@@ -150,7 +151,12 @@ def main():
     tag = 'landscape'
     allPhotos =  getBlogPhotos(tumblr, tag)
 
+    print('Sleeping for a few seconds')
+    print('This seems to stop errors with posting the image\n')
+    sleep(5)
+
     photo = getRandomPhoto(allPhotos)
+    printPhotoInfoLogMessage(photo)
 
     params = {
             'type': 'photo',
@@ -160,8 +166,19 @@ def main():
 
     glitchPhoto(photo)
 
-    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=photo['fp'])
-    print('post id is %s' % response['id'])
+    try:
+        resp = tumblr.post('post',
+                           'http://rumblesan.tumblr.com',
+                           params=params,
+                           files=photo['fp'])
+        # Print a URL to the post we just made
+        print('Image posted:')
+        print('    http://rumblesan.tumblr.com/post/%s' % resp['id'])
+    except AttributeError as e:
+        print('Bugger, something went wrong!')
+        print(e)
+
+
 
 
 if __name__ == '__main__':
