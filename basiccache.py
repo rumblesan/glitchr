@@ -5,7 +5,7 @@ import pickle
 class BasicCache(object):
 
     def __init__(self, cacheFile):
-        self.filename = cacheFile + '.bch'
+        self.filename = '%s.bch' % cacheFile
         self.cache = {}
 
     def loadCache(self):

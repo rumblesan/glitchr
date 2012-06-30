@@ -8,8 +8,8 @@ import ConfigParser
 import argparse
 
 import os
-import sys
 from time import sleep
+from basiccache import BasicCache
 
 from random import choice
 from string import Template
@@ -34,7 +34,7 @@ def parseArgs():
 
 # Get all the photos from blogs you follow photo posts
 # Tag arg can be used to filter
-def getBlogPhotos(tumblr, tag=None):
+def getBlogPhotos(tumblr, cache, tag=None):
     print('Getting photos from blogs you follow')
     allPhotos = []
 
@@ -44,16 +44,27 @@ def getBlogPhotos(tumblr, tag=None):
     for blog in following['blogs']:
         blogUrl  = blog['url']
         blogName = blog['name']
-        print('    Getting images from %s at %s' %(blogName, blogUrl))
-        params = {}
-        if tag:
-            params['tag'] = tag
+        lastChanged = blog['updated']
 
-        postsInfo = tumblr.api_request('posts',
-                                       blogUrl,
-                                       extra_endpoints=['photo'],
-                                       params=params)
-        allPhotos += parseBlogPosts(postsInfo)
+        print('    Getting images from %s at %s' %(blogName, blogUrl))
+        if cache.hasDataChanged(blogName, lastChanged):
+            print('    Querying Tumblr')
+            params = {}
+            if tag:
+                params['tag'] = tag
+
+            postsInfo = tumblr.api_request('posts',
+                                           blogUrl,
+                                           extra_endpoints=['photo'],
+                                           params=params)
+            blogPhotos = parseBlogPosts(postsInfo)
+
+            cache.cacheData(blogName, blogPhotos, lastChanged)
+        else:
+            print('    Using data from cache')
+            blogPhotos = cache.retrieveData(blogName)
+
+        allPhotos += blogPhotos
 
     print('%s photos found to choose from\n' % len(allPhotos))
     return allPhotos
@@ -151,9 +162,13 @@ def main():
 
     tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
 
+    postCache = BasicCache(config.get('cache', 'posts'))
+    postCache.loadCache()
 
     tag = 'landscape'
-    allPhotos =  getBlogPhotos(tumblr, tag)
+    allPhotos =  getBlogPhotos(tumblr, postCache, tag)
+
+    postCache.saveCache()
 
     print('Sleeping for a few seconds')
     print('This seems to stop errors with posting the image\n')
