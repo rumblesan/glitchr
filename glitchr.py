@@ -8,6 +8,7 @@ import ConfigParser
 import argparse
 
 import os
+import sys
 from time import sleep
 
 from random import choice
@@ -20,12 +21,15 @@ from jpegglitcher import JpegGlitcher
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
     parser.add_argument('config', help='The config file')
+    parser.add_argument('-t', '--testing',
+                        action='store_true',
+                        help="Testing flag. Glitchr won't post photo")
     args = parser.parse_args()
 
     config = ConfigParser.SafeConfigParser()
     config.read(args.config)
 
-    return config
+    return (args, config)
 
 
 # Get all the photos from blogs you follow photo posts
@@ -139,7 +143,7 @@ def glitchPhoto(photo):
 
 def main():
 
-    config = parseArgs()
+    args, config = parseArgs()
     consumerKey    = config.get('consumer', 'key')
     consumerSecret = config.get('consumer', 'secret')
     oauthToken     = config.get('oauth', 'key')
@@ -166,17 +170,20 @@ def main():
 
     glitchPhoto(photo)
 
-    try:
-        resp = tumblr.post('post',
-                           'http://rumblesan.tumblr.com',
-                           params=params,
-                           files=photo['fp'])
-        # Print a URL to the post we just made
-        print('Image posted:')
-        print('    http://rumblesan.tumblr.com/post/%s' % resp['id'])
-    except AttributeError as e:
-        print('Bugger, something went wrong!')
-        print(e)
+    if args.testing:
+        print('Only testing, not posting images')
+    else:
+        try:
+            resp = tumblr.post('post',
+                               'http://rumblesan.tumblr.com',
+                               params=params,
+                               files=photo['fp'])
+            # Print a URL to the post we just made
+            print('Image posted:')
+            print('    http://rumblesan.tumblr.com/post/%s' % resp['id'])
+        except AttributeError as e:
+            print('Bugger, something went wrong!')
+            print(e)
 
 
 
