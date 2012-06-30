@@ -177,7 +177,7 @@ def main():
 
     print('Getting images with %s tag' % tag)
 
-    cacheFileName = '%s-%s' % (tag, config.get('cache', 'posts'))
+    cacheFileName = '%s-%s' % (config.get('cache', 'posts'), tag)
     postCache = BasicCache(cacheFileName)
     postCache.loadCache()
 
