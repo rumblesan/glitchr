@@ -9,9 +9,12 @@ class BasicCache(object):
         self.cache = {}
 
     def loadCache(self):
-        fp = open(self.filename)
-        self.cache = pickle.load(fp)
-        fp.close()
+        try:
+            with open(self.filename) as fp:
+                self.cache = pickle.load(fp)
+                fp.close()
+        except IOError:
+            self.cache = {}
 
     def saveCache(self):
         fp = open(self.filename, 'w')
