@@ -27,12 +27,19 @@ def parseArgs():
     return config
 
 
-# Get all the photos from followers photo posts
-def getFollowerPhotos(followers, tumblr, tag=None):
+# Get all the photos from blogs you follow photo posts
+# Tag arg can be used to filter
+def getBlogPhotos(tumblr, tag=None):
+    print('Getting photos from blogs you follow')
     allPhotos = []
 
-    for blog in followers:
-        blogUrl = blog['url']
+    following = tumblr.api_request('user/following')
+    print('Following %s blogs' % following['total_blogs'])
+
+    for blog in following['blogs']:
+        blogUrl  = blog['url']
+        blogName = blog['name']
+        print('Getting images from %s at %s' %(blogName, blogUrl))
         params = {}
         if tag:
             params['tag'] = tag
@@ -41,11 +48,12 @@ def getFollowerPhotos(followers, tumblr, tag=None):
                                        blogUrl,
                                        extra_endpoints=['photo'],
                                        params=params)
-        allPhotos += parseFollowerPosts(postsInfo)
+        allPhotos += parseBlogPosts(postsInfo)
 
+    print('%s photos found to choose from' % len(allPhotos))
     return allPhotos
 
-def parseFollowerPosts(postsInfo):
+def parseBlogPosts(postsInfo):
     blogPhotos = []
 
     blog  = postsInfo['blog']
@@ -54,6 +62,7 @@ def parseFollowerPosts(postsInfo):
     for post in posts:
         blogPhotos += parsePostPhotos(blog, post)
 
+    print('    blog has %s photos' % len(blogPhotos))
     return blogPhotos
 
 def parsePostPhotos(blog, post):
@@ -86,13 +95,16 @@ def parsePostPhotos(blog, post):
     return postPhotos
 
 
-
+# Select a random
 def getRandomPhoto(photos):
+    print('Selecting a random photo')
     photo = choice(photos)
-    photo['imageData'] = Photo(photo['imgUrl'])
+    p = Photo(photo['imgUrl'])
+    p.retrieve()
+    photo['imageData'] = p.getData()
     return photo
 
-def createCaption(data):
+def createCaption(photo):
     templt  = '<a href="$imgUrl">Original</a> '
     templt += 'image courtesy of '
     templt += '<a href="${blogUrl}">${blogName}</a>'
@@ -100,7 +112,28 @@ def createCaption(data):
     templt += '<a href="$postUrl">First posted</a> on ${postDate}'
     c = Template(templt)
 
-    return c.substitute(data)
+    return c.substitute(photo)
+
+def photoInfoLogMessage(photo):
+    templt  = 'Caption Info:'
+    templt += '\n'
+    templt += '    Original image courtesy of ${blogName}'
+    templt += '\n'
+    templt += '    First posted on ${postDate}'
+    templt += '\n'
+    c = Template(templt)
+
+    print(c.substitute(photo))
+
+
+def glitchPhoto(photo):
+    print('Glitching image')
+    parser = JpegGlitcher(photo['imageData'])
+    parser.parse_data()
+    parser.find_parts()
+    parser.quantize_glitch()
+    photo['fp'] = parser.output_file('glitched.jpg')
+    photo['fp'].name = 'glitched.jpeg'
 
 
 def main():
@@ -113,38 +146,22 @@ def main():
 
     tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
 
-    followers = tumblr.api_request('user/following')['blogs']
 
     tag = 'landscape'
-    allPhotos =  getFollowerPhotos(followers, tumblr, tag)
-
-    print('%s photos found to choose from' % len(allPhotos))
+    allPhotos =  getBlogPhotos(tumblr, tag)
 
     photo = getRandomPhoto(allPhotos)
 
-    photo['imageData'].retrieve()
-    imgData = photo['imageData'].getData()
-
-    caption = createCaption(photo)
-    print(caption)
-
-    parser = JpegGlitcher(imgData)
-    parser.parse_data()
-    parser.find_parts()
-    parser.quantize_glitch()
-    glitched = parser.output_file('output.jpg')
-    glitched.name = 'file.jpeg'
-
     params = {
             'type': 'photo',
-            'caption': caption,
+            'caption': createCaption(photo),
             'tags': 'glitch, generative, random'
             }
 
-    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=glitched)
+    glitchPhoto(photo)
+
+    response = tumblr.post('post', 'http://rumblesan.tumblr.com', params=params, files=photo['fp'])
     print('post id is %s' % response['id'])
-
-
 
 
 if __name__ == '__main__':
