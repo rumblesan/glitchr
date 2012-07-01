@@ -18,7 +18,7 @@ from string import Template
 
 from tumblpy import Tumblpy
 from photo import Photo
-from jpegglitcher import JpegGlitcher
+from glitchpy.jpegglitcher import JpegGlitcher
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -151,7 +151,6 @@ def glitchPhoto(photo):
     parser.find_parts()
     parser.quantize_glitch()
     photo['fp'] = parser.output_file('glitched.jpg')
-    photo['fp'].name = 'glitched.jpeg'
 
 
 def main():

@@ -1,0 +1,3 @@
+[submodule "glitchpy"]
+	path = glitchpy
+	url = git@github.com:rumblesan/glitchpy.git
