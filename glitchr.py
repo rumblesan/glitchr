@@ -10,6 +10,7 @@ import argparse
 import os
 from time import sleep
 from basiccache import BasicCache
+from datetime import datetime
 import sys
 
 from random import choice
@@ -159,6 +160,7 @@ def main():
     print('#     Glitchr     #')
     print('###################')
     print('\n')
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     args, config = parseArgs()
     consumerKey    = config.get('consumer', 'key')
     consumerSecret = config.get('consumer', 'secret')
@@ -216,7 +218,10 @@ def main():
             print(e)
 
     print('\n')
-    print('All done')
+    print('###################')
+    print('#    All done!    #')
+    print('###################')
+    print('\n\n')
 
 
 
