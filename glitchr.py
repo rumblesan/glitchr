@@ -18,7 +18,7 @@ from string import Template
 
 from tumblpy import Tumblpy
 from photo import Photo
-from glitchpy.jpegglitcher import JpegGlitcher
+from glitchpy import JpegGlitcher
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
