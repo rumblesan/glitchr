@@ -2,65 +2,44 @@
 
 # Basic script used to get OAUTH Tokens from tumblr
 
-import ConfigParser
-import argparse
-
-import oauth2 as oauth
-import urlparse
-
-CONSUMER_KEY = ''
-CONSUMER_SECRET = ''
-
-
-def parseArgs():
-    parser = argparse.ArgumentParser(description='Get OAUTH tokens from tumblr')
-    parser.add_argument('config', help='The config file')
-    args = parser.parse_args()
-
-    config = ConfigParser.SafeConfigParser()
-    config.read(args.config)
-
-    return config
+from sys import argv
+from tumblpy import Tumblpy
+from ConfigParser import SafeConfigParser
 
 def main():
-    REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
-    AUTHORIZATION_URL = 'http://www.tumblr.com/oauth/authorize'
-    ACCESS_TOKEN_URL = 'http://www.tumblr.com/oauth/access_token'
+    configFile = argv[1]
 
-    config = parseArgs()
+    config = SafeConfigParser()
+    config.read(configFile)
+
     consumer_key    = config.get('consumer', 'key')
     consumer_secret = config.get('consumer', 'secret')
 
-    consumer = oauth.Consumer(consumer_key, consumer_secret)
-    client = oauth.Client(consumer)
+    tumblr = Tumblpy(consumer_key, consumer_secret)
+    auth_props = tumblr.get_authentication_tokens()
 
-    resp, content = client.request(REQUEST_TOKEN_URL, "GET")
-    request_token = dict(urlparse.parse_qsl(content))
+    print("Go to the following link in your browser:")
+    print(auth_props['auth_url'])
+    print('')
 
-    print "Go to the following link in your browser:"
-    print "%s?oauth_token=%s" % (AUTHORIZATION_URL, request_token['oauth_token'])
-    print 
+    oauth_verifier = 'n'
+    while oauth_verifier.lower() == 'n':
+        oauth_verifier = raw_input('What is the PIN?:  ')
 
-    accepted = 'n'
-    while accepted.lower() == 'n':
-        accepted = raw_input('Have you authorized me? (y/n) ')
-    oauth_verifier = raw_input('What is the PIN? ')
+    tumblr = Tumblpy(consumer_key,
+                     consumer_secret,
+                     auth_props['oauth_token'],
+                     auth_props['oauth_token_secret'])
 
-    token = oauth.Token(request_token['oauth_token'],
-        request_token['oauth_token_secret'])
-    token.set_verifier(oauth_verifier)
-    client = oauth.Client(consumer, token)
+    authorized_tokens = tumblr.get_access_token(oauth_verifier)
 
-    resp, content = client.request(ACCESS_TOKEN_URL, "POST")
-    access_token = dict(urlparse.parse_qsl(content))
+    config.set('oauth', 'key', authorized_tokens['oauth_token'])
+    config.set('oauth', 'secret', authorized_tokens['oauth_token_secret'])
+    
+    print('Saving keys to config file %s' % configFile)
 
-    print access_token
-    print "Access Token:"
-    print "    - oauth_token        = %s" % access_token['oauth_token']
-    print "    - oauth_token_secret = %s" % access_token['oauth_token_secret']
-    print
-    print "You may now access protected resources using the access tokens above." 
-    print
+    with open(configFile, 'w') as fp:
+        config.write(fp)
 
 if __name__ == "__main__":
     main()
