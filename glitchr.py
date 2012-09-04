@@ -23,6 +23,7 @@ from glitchpy import JpegGlitcher
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
     parser.add_argument('config', help='The config file')
+    parser.add_argument('blogs', help='A file of blogs to search')
     parser.add_argument('-t', '--testing',
                         action='store_true',
                         help="Testing flag. Glitchr won't post photo")
@@ -36,17 +37,14 @@ def parseArgs():
 
 # Get all the photos from blogs you follow photo posts
 # Tag arg can be used to filter
-def getBlogPhotos(tumblr, cache, tag=None):
-    print('Getting photos from blogs you follow')
+def getBlogPhotos(tumblr, blogs, cache, tag=None):
+    print('Getting photos from blogs in list')
     allPhotos = []
 
-    following = tumblr.api_request('user/following')
-    print('Following %s blogs' % following['total_blogs'])
-
-    for blog in following['blogs']:
-        blogUrl  = blog['url']
-        blogName = blog['name']
-        lastChanged = blog['updated']
+    for blogUrl in blogs:
+        blogInfo = tumblr.api_request('info', blogUrl)['blog']
+        blogName = blogInfo['name']
+        lastChanged = blogInfo['updated']
 
         print('    Getting images from %s at %s' %(blogName, blogUrl))
         if cache.hasDataChanged(blogName, lastChanged):
@@ -182,7 +180,10 @@ def main():
     postCache = BasicCache(cacheFileName)
     postCache.loadCache()
 
-    allPhotos =  getBlogPhotos(tumblr, postCache, tag)
+    blogs = open(args.blogs).read().splitlines()
+    print('Searching %d blogs' % len(blogs))
+
+    allPhotos =  getBlogPhotos(tumblr, blogs, postCache, tag)
 
     postCache.saveCache()
 
