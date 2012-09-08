@@ -16,7 +16,7 @@ import sys
 from random import choice
 from string import Template
 
-from tumblpy import Tumblpy
+from tumblpy import Tumblpy,TumblpyError
 from photo import Photo
 from glitchpy import JpegGlitcher
 
@@ -42,29 +42,33 @@ def getBlogPhotos(tumblr, blogs, cache, tag=None):
     allPhotos = []
 
     for blogUrl in blogs:
-        blogInfo = tumblr.api_request('info', blogUrl)['blog']
-        blogName = blogInfo['name']
-        lastChanged = blogInfo['updated']
+        try:
+            blogInfo = tumblr.api_request('info', blogUrl)['blog']
+            blogName = blogInfo['name']
+            lastChanged = blogInfo['updated']
 
-        print('    Getting images from %s at %s' %(blogName, blogUrl))
-        if cache.hasDataChanged(blogName, lastChanged):
-            print('    Querying Tumblr')
-            params = {}
-            if tag:
-                params['tag'] = tag
+            print('    Getting images from %s at %s' %(blogName, blogUrl))
+            if cache.hasDataChanged(blogName, lastChanged):
+                print('    Querying Tumblr')
+                params = {}
+                if tag:
+                    params['tag'] = tag
 
-            postsInfo = tumblr.api_request('posts',
-                                           blogUrl,
-                                           extra_endpoints=['photo'],
-                                           params=params)
-            blogPhotos = parseBlogPosts(postsInfo)
+                postsInfo = tumblr.api_request('posts',
+                                               blogUrl,
+                                               extra_endpoints=['photo'],
+                                               params=params)
+                blogPhotos = parseBlogPosts(postsInfo)
 
-            cache.cacheData(blogName, blogPhotos, lastChanged)
-        else:
-            print('    Using data from cache')
-            blogPhotos = cache.retrieveData(blogName)
+                cache.cacheData(blogName, blogPhotos, lastChanged)
+            else:
+                print('    Using data from cache')
+                blogPhotos = cache.retrieveData(blogName)
 
-        allPhotos += blogPhotos
+            allPhotos += blogPhotos
+        except TumblpyError:
+            print("ERROR")
+            print("Problem retrieving data from blog %s" % blogUrl)
 
     print('%s photos found to choose from\n' % len(allPhotos))
     return allPhotos
