@@ -201,7 +201,7 @@ def main():
     params = {
             'type': 'photo',
             'caption': createCaption(photo),
-            'tags': 'glitch, generative, random'
+            'tags': 'Glitchr, glitch, generative, random'
             }
 
     glitchPhoto(photo)
