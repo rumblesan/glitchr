@@ -219,7 +219,7 @@ def main():
                                files=photo['fp'])
             # Print a URL to the post we just made
             print('Image posted:')
-            print('    http://rumblesan.tumblr.com/post/%s' % resp['id'])
+            print('    http://%s/post/%s' % (blogurl, resp['id']))
         except AttributeError as e:
             print('Bugger, something went wrong!')
             print(e)
