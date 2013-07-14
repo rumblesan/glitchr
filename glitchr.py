@@ -168,6 +168,7 @@ def main():
     oauthToken     = config.get('oauth', 'key')
     oauthSecret    = config.get('oauth', 'secret')
 
+    blogurl = config.get('blog', 'url')
 
     print('Sorting out Tumblr OAuth')
     tumblr = Tumblpy(consumerKey, consumerSecret, oauthToken, oauthSecret)
@@ -211,7 +212,7 @@ def main():
     else:
         try:
             resp = tumblr.post('post',
-                               'http://rumblesan.tumblr.com',
+                               'http://%s' % blogurl,
                                params=params,
                                files=photo['fp'])
             # Print a URL to the post we just made
