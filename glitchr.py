@@ -11,14 +11,14 @@ import os
 from time import sleep
 from basiccache import BasicCache
 from datetime import datetime
-import sys
 
 from random import choice
 from string import Template
 
-from tumblpy import Tumblpy,TumblpyError
+from tumblpy import Tumblpy, TumblpyError
 from photo import Photo
 from glitchpy import JpegGlitcher
+
 
 def parseArgs():
     parser = argparse.ArgumentParser(description='Retrieve Photo Posts')
@@ -47,7 +47,7 @@ def getBlogPhotos(tumblr, blogs, cache, tag=None):
             blogName = blogInfo['name']
             lastChanged = blogInfo['updated']
 
-            print('    Getting images from %s at %s' %(blogName, blogUrl))
+            print('    Getting images from %s at %s' % (blogName, blogUrl))
             if cache.hasDataChanged(blogName, lastChanged):
                 print('    Querying Tumblr')
                 params = {}
@@ -73,10 +73,11 @@ def getBlogPhotos(tumblr, blogs, cache, tag=None):
     print('%s photos found to choose from\n' % len(allPhotos))
     return allPhotos
 
+
 def parseBlogPosts(postsInfo):
     blogPhotos = []
 
-    blog  = postsInfo['blog']
+    blog = postsInfo['blog']
     posts = postsInfo['posts']
 
     for post in posts:
@@ -85,15 +86,16 @@ def parseBlogPosts(postsInfo):
     print('        blog has %s photos' % len(blogPhotos))
     return blogPhotos
 
+
 def parsePostPhotos(blog, post):
     postPhotos = []
 
     blogName = blog['title']
-    blogUrl  = blog['url']
+    blogUrl = blog['url']
 
-    postUrl  = post['post_url']
+    postUrl = post['post_url']
     postDate = post['date']
-    photos   = post['photos']
+    photos = post['photos']
 
     # There could be multiple photos in one post
     # so we need to iterate through them all
@@ -103,8 +105,7 @@ def parsePostPhotos(blog, post):
 
         # We only want jpeg images, because that's all we can glitch atm
         if ext == '.jpg' or ext == '.jpeg':
-            data = {
-                    'blogName': blogName,
+            data = {'blogName': blogName,
                     'postUrl': postUrl,
                     'blogUrl': blogUrl,
                     'imgUrl': imgUrl,
@@ -124,8 +125,9 @@ def getRandomPhoto(photos):
     photo['imageData'] = p.getData()
     return photo
 
+
 def createCaption(photo):
-    templt  = '<a href="$imgUrl">Original</a> '
+    templt = '<a href="$imgUrl">Original</a> '
     templt += 'image courtesy of '
     templt += '<a href="${blogUrl}">${blogName}</a>'
     templt += '\n'
@@ -134,8 +136,9 @@ def createCaption(photo):
 
     return c.substitute(photo)
 
+
 def printPhotoInfoLogMessage(photo):
-    templt  = 'Caption Info:'
+    templt = 'Caption Info:'
     templt += '\n'
     templt += '    Original image courtesy of ${blogName}'
     templt += '\n'
@@ -163,10 +166,10 @@ def main():
     print('\n')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     args, config = parseArgs()
-    consumerKey    = config.get('consumer', 'key')
+    consumerKey = config.get('consumer', 'key')
     consumerSecret = config.get('consumer', 'secret')
-    oauthToken     = config.get('oauth', 'key')
-    oauthSecret    = config.get('oauth', 'secret')
+    oauthToken = config.get('oauth', 'key')
+    oauthSecret = config.get('oauth', 'secret')
 
     blogurl = config.get('blog', 'url')
 
@@ -188,7 +191,7 @@ def main():
     blogs = open(args.blogs).read().splitlines()
     print('Searching %d blogs' % len(blogs))
 
-    allPhotos =  getBlogPhotos(tumblr, blogs, postCache, tag)
+    allPhotos = getBlogPhotos(tumblr, blogs, postCache, tag)
 
     postCache.saveCache()
 
@@ -199,11 +202,10 @@ def main():
     photo = getRandomPhoto(allPhotos)
     printPhotoInfoLogMessage(photo)
 
-    params = {
-            'type': 'photo',
-            'caption': createCaption(photo),
-            'tags': 'Glitchr, glitch, generative, random'
-            }
+    params = {'type': 'photo',
+              'caption': createCaption(photo),
+              'tags': 'Glitchr, glitch, generative, random'
+              }
 
     glitchPhoto(photo)
 
@@ -229,7 +231,5 @@ def main():
     print('\n\n')
 
 
-
 if __name__ == '__main__':
     main()
-
